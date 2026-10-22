@@ -1,0 +1,38 @@
+# Save as .github/workflows/daily-predictions.yml in YOUR fork of the repo.
+# Put export_predictions.py and log_results.py in the repo root (next to main.py).
+name: Daily predictions
+
+on:
+  schedule:
+    - cron: "0 15 * * *"   # 15:00 UTC (11am ET), after most books post lines
+  workflow_dispatch:         # lets you run it by hand from the Actions tab
+
+permissions:
+  contents: write            # needed to commit predictions.json
+
+jobs:
+  export:
+    runs-on: ubuntu-latest   # change to self-hosted if stats.nba.com blocks GitHub's servers
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Export predictions
+        run: python export_predictions.py -odds=fanduel -out=predictions.json
+
+      - name: Log picks and grade past results
+        run: python log_results.py
+
+      - name: Commit if changed
+        run: |
+          git config user.name "predictions-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add predictions.json pick_log.json
+          git diff --staged --quiet || (git commit -m "Update predictions" && git push)
