@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Court Edge: NBA model picks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F4F5F2;--surface:#FFFFFF;--ink:#12202F;--muted:#5C6B7A;--line:#D9DED8;--model:#2457D6;--market:#12202F;--edge:#0F7A55;--loss:#B3402F;--track:#E4E8E2;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0E1620;--surface:#16212E;--ink:#EAF0F5;--muted:#93A3B3;--line:#2A3949;--model:#6C97FF;--market:#EAF0F5;--edge:#3FCB98;--loss:#F08A78;--track:#223142}}
+:root[data-theme="dark"]{--bg:#0E1620;--surface:#16212E;--ink:#EAF0F5;--muted:#93A3B3;--line:#2A3949;--model:#6C97FF;--market:#EAF0F5;--edge:#3FCB98;--loss:#F08A78;--track:#223142}
+html{scroll-padding-top:env(safe-area-inset-top,0px);color-scheme:light dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Archivo',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;line-height:1.5;font-variant-numeric:tabular-nums}
+.wrap{max-width:860px;margin:0 auto;padding:28px 18px 64px}
+h1{font-size:clamp(34px,7vw,56px);line-height:1;margin:0 0 6px;font-weight:800;font-stretch:75%;letter-spacing:-.01em}
+h2{font-size:20px;margin:40px 0 12px;font-weight:700}
+.sub{color:var(--muted);margin:0 0 18px}
+.note{border:1px solid var(--line);background:var(--surface);border-left:4px solid var(--model);padding:10px 14px;border-radius:6px;font-size:14px;color:var(--muted)}
+.stats{display:flex;gap:28px;flex-wrap:wrap;margin:22px 0 6px}
+.stats b{display:block;font-size:26px;font-weight:700;color:var(--ink)}
+.stats span{font-size:13px;color:var(--muted)}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:22px 0 10px;font-size:14px;color:var(--muted)}
+.bar button{font:inherit;font-size:14px;padding:6px 12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;cursor:pointer}
+.bar button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+button:focus-visible{outline:3px solid var(--model);outline-offset:2px}
+.game{background:var(--surface);border:1px solid var(--line);border-radius:8px;margin-bottom:12px;padding:14px 16px}
+.top{display:flex;justify-content:space-between;gap:12px;align-items:baseline;flex-wrap:wrap}
+.match{font-size:18px;font-weight:700}
+.time{font-size:13px;color:var(--muted);font-weight:400;margin-left:8px}
+.pick{font-weight:700;color:var(--edge)}
+.pick.none{color:var(--muted);font-weight:500}
+.meter{position:relative;height:12px;background:var(--track);border-radius:6px;margin:14px 0 6px}
+.fill{position:absolute;left:0;top:0;bottom:0;background:var(--model);border-radius:6px 0 0 6px}
+.tick{position:absolute;top:-5px;bottom:-5px;width:3px;background:var(--market);border-radius:2px}
+.legend{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.more{margin-top:10px;font:inherit;font-size:13px;color:var(--model);background:none;border:0;padding:2px 0;cursor:pointer;text-decoration:underline}
+.detail{display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:14px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.detail.open{display:grid}
+.detail span{display:block;color:var(--muted);font-size:12px}
+.tbl{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:480px}
+th,td{text-align:left;padding:9px 14px;border-bottom:1px solid var(--line)}
+th{font-weight:600;color:var(--muted);font-size:13px}
+tr:last-child td{border-bottom:0}
+.w{color:var(--edge);font-weight:700}.l{color:var(--loss);font-weight:700}
+.prose{max-width:68ch;color:var(--muted);margin:0 0 12px}
+footer{margin-top:40px;font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Court Edge</h1>
+  <p class="sub" id="date"></p>
+  <div class="note"><span id="upd"></span> Predictions are estimates, not guarantees, and past results don’t predict future ones. 21+ only. Gambling problem? Call 1-800-GAMBLER.</div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="bar" role="group" aria-label="Filter by edge">
+    <span>Show edge of at least</span>
+    <button data-min="0" aria-pressed="true">Any</button>
+    <button data-min="0.02" aria-pressed="false">2%</button>
+    <button data-min="0.04" aria-pressed="false">4%</button>
+  </div>
+  <div id="games"></div>
+
+  <div id="resSec"><h2>Recent results</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>Date</th><th>Pick</th><th>Odds</th><th>Result</th><th>Units</th></tr></thead>
+    <tbody id="results"></tbody>
+  </table></div></div>
+
+  <h2>How the picks are made</h2>
+  <p class="prose">Each day the model estimates every team’s chance of winning from season team stats and days of rest. That estimate is compared with the win chance implied by the sportsbook’s moneyline, after removing the sportsbook’s margin. A pick appears when the model sees at least a 2% edge.</p>
+  <p class="prose">The stake shown is a quarter of the Kelly fraction, which assumes the model’s probabilities are right. They may not be. Every pick is logged before tip-off and graded afterward, wins and losses alike.</p>
+
+  <footer>How to read the bar: the blue fill is the model’s win probability for the pick. The dark tick is the sportsbook’s implied probability with the vig removed. The gap between them is the edge.</footer>
+</div>
+
+<script>
+// Fallback shown only if predictions.json cannot be loaded.
+var SAMPLE = {
+  date: "Thursday, October 22, 2026",
+  games: [
+    {away:"Celtics",home:"Knicks",time:"7:30 PM ET",mlAway:-135,mlHome:115,pHome:0.49,total:221.5,pOver:0.56},
+    {away:"Nuggets",home:"Lakers",time:"10:00 PM ET",mlAway:-150,mlHome:130,pHome:0.36,total:228.5,pOver:0.48},
+    {away:"Bucks",home:"Heat",time:"7:30 PM ET",mlAway:105,mlHome:-125,pHome:0.51,total:214.5,pOver:0.53},
+    {away:"Thunder",home:"Mavericks",time:"8:30 PM ET",mlAway:-180,mlHome:155,pHome:0.30,total:224.5,pOver:0.51},
+    {away:"Warriors",home:"Suns",time:"10:00 PM ET",mlAway:110,mlHome:-130,pHome:0.47,total:226.5,pOver:0.58}
+  ],
+  results: [
+    {date:"Oct 21",pick:"Cavaliers ML",odds:-110,won:true},
+    {date:"Oct 21",pick:"Under 219.5 Magic/Hawks",odds:-105,won:false},
+    {date:"Oct 20",pick:"Pacers ML",odds:+125,won:true},
+    {date:"Oct 20",pick:"Over 231.5 Kings/Jazz",odds:-110,won:true},
+    {date:"Oct 19",pick:"Clippers ML",odds:+105,won:false}
+  ]
+};
+var DATA=SAMPLE,usingSample=true;
+
+function imp(o){return o<0?-o/(-o+100):100/(o+100)}
+function pay(o){return o>0?o/100:100/-o}
+function fmtO(o){return o>0?"+"+o:""+o}
+function pct(x){return (x*100).toFixed(0)+"%"}
+function pp(x){return (x>=0?"+":"")+(x*100).toFixed(1)+" pts"}
+
+function analyze(g){
+  var a=imp(g.mlAway),h=imp(g.mlHome),s=a+h,mA=a/s,mH=h/s;
+  var pA=1-g.pHome,eA=pA-mA,eH=g.pHome-mH,home=eH>=eA;
+  var p=home?g.pHome:pA,m=home?mH:mA,o=home?g.mlHome:g.mlAway,b=pay(o);
+  var edge=p-m,ev=p*b-(1-p),kelly=Math.max(0,(b*p-(1-p))/b)/4;
+  var ou=g.pOver>=0.5?"Over":"Under",ouP=Math.max(g.pOver,1-g.pOver);
+  return {g:g,team:home?g.home:g.away,p:p,m:m,o:o,edge:edge,ev:ev,kelly:kelly,ou:ou,ouP:ouP};
+}
+
+var rows=[];
+var minEdge=0;
+
+function esc(t){return String(t).replace(/[&<>]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c]})}
+
+function renderGames(){
+  var out="",n=0;
+  rows.forEach(function(r,i){
+    if(r.edge<minEdge)return;
+    n++;
+    var hasEdge=r.edge>=0.02;
+    out+='<div class="game"><div class="top"><div class="match">'+esc(r.g.away)+' at '+esc(r.g.home)+'<span class="time">'+esc(r.g.time)+'</span></div>'+
+    '<div class="pick'+(hasEdge?'':' none')+'">'+(hasEdge?esc(r.team)+' ML '+fmtO(r.o)+' ('+pp(r.edge)+')':'No clear edge')+'</div></div>'+
+    '<div class="meter" role="img" aria-label="Model '+pct(r.p)+' for '+esc(r.team)+', market '+pct(r.m)+'"><div class="fill" style="width:'+(r.p*100)+'%"></div><div class="tick" style="left:calc('+(r.m*100)+'% - 1px)"></div></div>'+
+    '<div class="legend"><span><i style="background:var(--model)"></i>Model: '+esc(r.team)+' '+pct(r.p)+'</span><span><i style="background:var(--market)"></i>Market: '+pct(r.m)+'</span></div>'+
+    '<button class="more" aria-expanded="false" data-i="'+i+'">Show details</button>'+
+    '<div class="detail" id="d'+i+'"><div><span>Moneyline</span>'+esc(r.g.away)+' '+fmtO(r.g.mlAway)+', '+esc(r.g.home)+' '+fmtO(r.g.mlHome)+'</div>'+
+    '<div><span>Expected value per $1</span>'+(r.ev>=0?"+":"-")+'$'+Math.abs(r.ev).toFixed(2)+'</div>'+
+    '<div><span>Quarter-Kelly stake</span>'+(r.kelly*100).toFixed(1)+'% of bankroll</div>'+
+    '<div><span>Total '+r.g.total+'</span>'+r.ou+' at '+pct(r.ouP)+' model confidence</div></div></div>';
+  });
+  document.getElementById("games").innerHTML=out||'<div class="note">'+(rows.length?'No games meet this edge. Choose a lower threshold.':'No games today. Check back tomorrow.')+'</div>';
+}
+
+function renderStats(){
+  var res=DATA.results||[],units=0,w=0;
+  document.getElementById("resSec").style.display=res.length?"":"none";
+  res.forEach(function(x){if(x.won){w++;units+=pay(x.odds)}else units-=1});
+  var picks=rows.filter(function(r){return r.edge>=0.02}).length;
+  document.getElementById("stats").innerHTML=
+   '<div><b>'+rows.length+'</b><span>Games today</span></div>'+
+   '<div><b>'+picks+'</b><span>Games with a 2%+ edge</span></div>'+
+   (res.length?'<div><b>'+w+'-'+(res.length-w)+'</b><span>Last '+res.length+' picks</span></div>'+
+   '<div><b>'+(units>=0?"+":"")+units.toFixed(2)+'u</b><span>Units, flat 1u stakes</span></div>':'');
+  document.getElementById("results").innerHTML=res.map(function(x){
+    var u=x.won?pay(x.odds):-1;
+    return '<tr><td>'+esc(x.date)+'</td><td>'+esc(x.pick)+'</td><td>'+fmtO(x.odds)+'</td><td class="'+(x.won?'w':'l')+'">'+(x.won?'Win':'Loss')+'</td><td>'+(u>=0?"+":"")+u.toFixed(2)+'</td></tr>';
+  }).join("");
+}
+
+function show(){
+  rows=(DATA.games||[]).map(analyze).sort(function(x,y){return y.edge-x.edge});
+  document.getElementById("date").textContent=DATA.date||"";
+  document.getElementById("upd").textContent=usingSample?"Showing sample data because predictions.json was not found.":(DATA.generated?"Updated "+new Date(DATA.generated).toLocaleString()+".":"");
+  renderStats();renderGames();
+}
+fetch("predictions.json",{cache:"no-store"}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(d){DATA=d;usingSample=false;show()}).catch(function(){show()});
+
+document.querySelector(".bar").addEventListener("click",function(e){
+  var b=e.target.closest("button");if(!b)return;
+  minEdge=parseFloat(b.dataset.min);
+  document.querySelectorAll(".bar button").forEach(function(x){x.setAttribute("aria-pressed",x===b?"true":"false")});
+  renderGames();
+});
+document.getElementById("games").addEventListener("click",function(e){
+  var b=e.target.closest(".more");if(!b)return;
+  var d=document.getElementById("d"+b.dataset.i),open=d.classList.toggle("open");
+  b.setAttribute("aria-expanded",open);b.textContent=open?"Hide details":"Show details";
+});
+</script>
+</body>
+</html>
